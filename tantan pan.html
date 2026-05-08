@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tanatan Pan® | 3D Experience</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,400&family=DM+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+  --crimson: #e63946;
+  --saffron: #ff9f1c;
+  --emerald: #2dc653;
+  --gold: #ffd166;
+  --rose: #ff6b9d;
+  --teal: #06d6a0;
+  --deep: #0d0005;
+  --mid: #1a0010;
+  --text-light: rgba(255,255,255,0.92);
+  --text-muted: rgba(255,255,255,0.55);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--deep);
+  color: var(--text-light);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ─── CUSTOM CURSOR ─── */
+#cursor {
+  position: fixed; pointer-events: none; z-index: 9999;
+  width: 14px; height: 14px;
+  background: var(--saffron);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  transition: width .2s, height .2s, background .2s;
+  mix-blend-mode: screen;
+}
+#cursor-ring {
+  position: fixed; pointer-events: none; z-index: 9998;
+  width: 40px; height: 40px;
+  border: 2px solid rgba(255,159,28,0.5);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  transition: all .08s ease;
+}
+body:hover #cursor { opacity:1; }
+
+/* ─── CANVAS ─── */
+#bg-canvas {
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 6vw;
+  background: linear-gradient(to bottom, rgba(13,0,5,0.95), transparent);
+  border-bottom: 1px solid rgba(255,159,28,0.15);
+}
+.nav-logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.35rem; font-weight: 900;
+  background: linear-gradient(135deg, #ffd166, #ff9f1c, #e63946);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: 2px;
+}
+.nav-links { display: flex; gap: 2.2rem; list-style: none; }
+.nav-links a {
+  color: var(--text-muted); text-decoration: none;
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; transition: color .3s;
+  position: relative;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+  height: 1px; background: var(--saffron);
+  transform: scaleX(0); transform-origin: left; transition: transform .3s;
+}
+.nav-links a:hover { color: var(--saffron); }
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-cta {
+  background: linear-gradient(135deg, var(--crimson), var(--saffron));
+  color: #fff; padding: 11px 24px; border-radius: 50px;
+  font-size: 0.82rem; font-weight: 700; text-decoration: none;
+  letter-spacing: 1px; text-transform: uppercase;
+  box-shadow: 0 0 30px rgba(230,57,70,0.4);
+  transition: transform .2s, box-shadow .2s;
+}
+.nav-cta:hover { transform: scale(1.06); box-shadow: 0 0 50px rgba(255,159,28,0.5); }
+
+/* ─── HERO ─── */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; text-align: center;
+  padding: 120px 6vw 80px;
+  overflow: hidden;
+}
+
+/* Floating orbs */
+.orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0.35; pointer-events: none;
+  animation: orb-drift 8s ease-in-out infinite;
+}
+.orb1 { width:500px;height:500px;background:radial-gradient(var(--crimson),transparent); top:-100px;left:-100px; animation-delay:-2s; }
+.orb2 { width:400px;height:400px;background:radial-gradient(var(--saffron),transparent); bottom:-80px;right:-80px; animation-delay:-5s; }
+.orb3 { width:300px;height:300px;background:radial-gradient(var(--emerald),transparent); top:40%;left:60%; animation-delay:-1s; }
+@keyframes orb-drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,30px) scale(0.95); }
+}
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,209,102,0.12); border: 1px solid rgba(255,209,102,0.3);
+  color: var(--gold); font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  padding: 9px 22px; border-radius: 50px; margin-bottom: 32px;
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+@keyframes glow-pulse {
+  0%,100% { box-shadow: 0 0 20px rgba(255,209,102,0.2); }
+  50% { box-shadow: 0 0 40px rgba(255,209,102,0.4); }
+}
+
+.hero-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(2.8rem, 9vw, 7rem);
+  font-weight: 900; line-height: 1.0;
+  margin-bottom: 10px;
+  position: relative;
+}
+.title-line1 { color: rgba(255,255,255,0.9); }
+.title-line2 {
+  background: linear-gradient(135deg, #ffd166 0%, #ff9f1c 30%, #e63946 60%, #ff6b9d 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+  display: block;
+}
+@keyframes gradient-shift {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.hero-script {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  color: var(--text-muted); margin: 24px 0 44px;
+  font-weight: 300;
+}
+
+.hero-btns {
+  display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 60px;
+}
+.btn-3d {
+  position: relative;
+  padding: 16px 40px; border-radius: 50px;
+  font-size: 0.88rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; text-decoration: none;
+  transition: transform .2s, box-shadow .2s;
+  overflow: hidden;
+}
+.btn-3d::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(255,255,255,0.1);
+  transform: translateX(-100%) skewX(-15deg);
+  transition: transform .4s;
+}
+.btn-3d:hover::before { transform: translateX(110%) skewX(-15deg); }
+.btn-fire {
+  background: linear-gradient(135deg, #e63946, #ff9f1c);
+  color: #fff;
+  box-shadow: 0 8px 40px rgba(230,57,70,0.45), 0 0 0 1px rgba(255,159,28,0.3);
+}
+.btn-fire:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 20px 60px rgba(230,57,70,0.6); }
+.btn-ghost {
+  background: transparent; color: var(--gold);
+  border: 2px solid rgba(255,209,102,0.4);
+  box-shadow: inset 0 0 20px rgba(255,209,102,0.05);
+}
+.btn-ghost:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 0 30px rgba(255,209,102,0.2); }
+
+/* Rating strip */
+.hero-rating {
+  display: flex; align-items: center; gap: 20px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50px; padding: 14px 32px;
+  backdrop-filter: blur(10px);
+}
+.rating-stars { font-size: 1.2rem; letter-spacing: 4px; }
+.rating-val { font-family: 'Cinzel Decorative', serif; font-size: 1.4rem; color: var(--gold); }
+.rating-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 300; }
+.rating-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.15); }
+
+/* ─── 3D SCROLL MARQUEE ─── */
+.marquee-section {
+  position: relative; z-index: 1;
+  padding: 0; overflow: hidden;
+  background: linear-gradient(90deg, var(--crimson) 0%, #a00020 50%, var(--crimson) 100%);
+  border-top: 2px solid rgba(255,159,28,0.4);
+  border-bottom: 2px solid rgba(255,159,28,0.4);
+}
+.marquee-track {
+  display: flex; white-space: nowrap;
+  animation: marquee 20s linear infinite;
+  padding: 14px 0;
+}
+.marquee-item {
+  color: #fff; font-weight: 700; font-size: 0.88rem;
+  letter-spacing: 2px; text-transform: uppercase; padding: 0 32px;
+  flex-shrink: 0;
+}
+.dot { color: var(--gold); margin: 0 6px; }
+@keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+/* ─── SECTIONS ─── */
+.section {
+  position: relative; z-index: 1;
+  padding: 100px 6vw;
+}
+.section-inner { max-width: 1200px; margin: 0 auto; }
+.section-eyebrow {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--saffron);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+}
+.section-eyebrow::before, .section-eyebrow::after {
+  content: ''; flex: 1; max-width: 60px; height: 1px; background: var(--saffron); opacity: 0.4;
+}
+.section-h2 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 700; line-height: 1.1; margin-bottom: 20px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.section-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem; color: var(--text-muted);
+  font-weight: 300; font-style: italic; max-width: 500px; line-height: 1.8;
+}
+.centered { text-align: center; }
+.centered .section-sub { margin: 0 auto; }
+
+/* ─── ABOUT ─── */
+.about-section { background: linear-gradient(180deg, var(--deep) 0%, #150008 100%); }
+.about-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+  align-items: center; margin-top: 60px;
+}
+.about-img-wrap {
+  position: relative; border-radius: 24px; overflow: hidden;
+  box-shadow: 0 40px 100px rgba(230,57,70,0.3), 0 0 0 1px rgba(255,159,28,0.2);
+  aspect-ratio: 4/3;
+  transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+  transition: transform .5s ease;
+}
+.about-img-wrap:hover { transform: perspective(1000px) rotateY(0deg) rotateX(0deg); }
+.about-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(0.9) saturate(1.2);
+}
+.about-glow {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(230,57,70,0.2) 0%, transparent 50%, rgba(255,159,28,0.15) 100%);
+  pointer-events: none;
+}
+.grand-badge {
+  position: absolute; top:20px; left:20px;
+  background: linear-gradient(135deg, var(--crimson), var(--saffron));
+  color: #fff; font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 9px 18px; border-radius: 50px;
+  box-shadow: 0 8px 24px rgba(230,57,70,0.4);
+}
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px;
+}
+.stat-3d {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 24px 20px;
+  text-align: center;
+  transform: perspective(600px) rotateX(0deg);
+  transition: transform .3s, box-shadow .3s, border-color .3s;
+  position: relative; overflow: hidden;
+}
+.stat-3d::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,159,28,0.08), transparent);
+  opacity: 0; transition: opacity .3s;
+}
+.stat-3d:hover {
+  transform: perspective(600px) rotateX(-6deg) translateY(-4px);
+  box-shadow: 0 20px 40px rgba(255,159,28,0.2);
+  border-color: rgba(255,159,28,0.3);
+}
+.stat-3d:hover::before { opacity: 1; }
+.stat-3d-num {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2.4rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--gold), var(--saffron));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-3d-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* ─── MENU ─── */
+.menu-section { background: linear-gradient(180deg, #150008 0%, #0a0015 100%); }
+.menu-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px; margin-top: 60px;
+}
+.menu-card-3d {
+  background: linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px; overflow: hidden;
+  transition: transform .4s cubic-bezier(.25,.8,.25,1), box-shadow .4s;
+  transform-style: preserve-3d;
+  position: relative; cursor: pointer;
+}
+.menu-card-3d:hover {
+  transform: perspective(800px) rotateY(-6deg) rotateX(4deg) translateY(-8px) scale(1.02);
+  box-shadow: 20px 20px 60px rgba(0,0,0,0.5), -5px -5px 30px rgba(255,159,28,0.1);
+}
+.card-glow {
+  position: absolute; inset: 0; opacity: 0;
+  transition: opacity .4s; pointer-events: none;
+}
+.menu-card-3d:hover .card-glow { opacity: 1; }
+.card-face {
+  height: 180px; display: flex; align-items: center; justify-content: center;
+  font-size: 4.5rem; position: relative; overflow: hidden;
+}
+.card-face::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 120%, rgba(255,255,255,0.1), transparent 60%);
+}
+.card-body { padding: 24px; }
+.card-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.card-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 18px; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
+.card-price {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.1rem; color: var(--gold);
+}
+.card-tag {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 5px 12px; border-radius: 50px;
+}
+.veg-dot {
+  position: absolute; top: 14px; right: 14px;
+  width: 22px; height: 22px; border-radius: 4px;
+  border: 2px solid var(--emerald); background: var(--deep);
+  display: grid; place-items: center;
+}
+.veg-dot::after {
+  content: ''; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--emerald);
+}
+
+/* Card themes */
+.c1 .card-face { background: linear-gradient(135deg, #1a0510, #2d0820); }
+.c1 .card-glow { background: linear-gradient(135deg, rgba(230,57,70,0.15), transparent); }
+.c1 .card-tag { background: rgba(230,57,70,0.2); color: var(--crimson); }
+.c2 .card-face { background: linear-gradient(135deg, #150a00, #2a1a00); }
+.c2 .card-glow { background: linear-gradient(135deg, rgba(255,159,28,0.15), transparent); }
+.c2 .card-tag { background: rgba(255,159,28,0.2); color: var(--saffron); }
+.c3 .card-face { background: linear-gradient(135deg, #001512, #002a20); }
+.c3 .card-glow { background: linear-gradient(135deg, rgba(45,198,83,0.15), transparent); }
+.c3 .card-tag { background: rgba(45,198,83,0.2); color: var(--emerald); }
+.c4 .card-face { background: linear-gradient(135deg, #10001a, #1e003a); }
+.c4 .card-glow { background: linear-gradient(135deg, rgba(255,107,157,0.15), transparent); }
+.c4 .card-tag { background: rgba(255,107,157,0.2); color: var(--rose); }
+.c5 .card-face { background: linear-gradient(135deg, #001520, #002a40); }
+.c5 .card-glow { background: linear-gradient(135deg, rgba(6,214,160,0.15), transparent); }
+.c5 .card-tag { background: rgba(6,214,160,0.2); color: var(--teal); }
+.c6 .card-face { background: linear-gradient(135deg, #15001a, #300040); }
+.c6 .card-glow { background: linear-gradient(135deg, rgba(255,209,102,0.15), transparent); }
+.c6 .card-tag { background: rgba(255,209,102,0.15); color: var(--gold); }
+
+/* ─── WHY US ─── */
+.why-section { background: linear-gradient(180deg, #0a0015 0%, var(--deep) 100%); }
+.why-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px; margin-top: 60px;
+}
+.why-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 24px; padding: 40px 28px;
+  transition: transform .4s, box-shadow .4s, border-color .4s;
+  position: relative; overflow: hidden;
+}
+.why-card::before {
+  content: ''; position: absolute; top: -50%;left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle at center, rgba(255,159,28,0.06), transparent 60%);
+  opacity: 0; transition: opacity .4s;
+}
+.why-card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255,159,28,0.25); box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 40px rgba(255,159,28,0.08); }
+.why-card:hover::before { opacity: 1; }
+.why-icon-wrap {
+  width: 64px; height: 64px; border-radius: 18px; margin-bottom: 24px;
+  display: grid; place-items: center; font-size: 1.8rem;
+}
+.why-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 10px; color: #fff; }
+.why-text { font-size: 0.87rem; color: var(--text-muted); line-height: 1.75; }
+
+/* ─── LOCATION ─── */
+.loc-section { background: var(--deep); }
+.loc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; margin-top: 60px; }
+.loc-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 28px; padding: 44px;
+  transition: box-shadow .4s;
+}
+.loc-card:hover { box-shadow: 0 0 60px rgba(255,159,28,0.1); }
+.loc-card h3 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.3rem; margin-bottom: 32px;
+  background: linear-gradient(135deg, var(--gold), var(--saffron));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.loc-row {
+  display: flex; gap: 18px; align-items: flex-start;
+  padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.loc-row:last-of-type { border-bottom: none; }
+.loc-icon { font-size: 1.5rem; flex-shrink: 0; }
+.loc-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--saffron); margin-bottom: 4px; }
+.loc-val { font-size: 0.92rem; color: var(--text-muted); line-height: 1.7; }
+.map-3d {
+  border-radius: 28px; overflow: hidden; position: relative;
+  background: linear-gradient(135deg, #1a0020, #000a20, #001a10);
+  min-height: 380px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 0 80px rgba(255,159,28,0.06);
+}
+.map-3d-emoji { font-size: 5rem; animation: float 4s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.map-location { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: #fff; }
+.map-sub { font-size: 0.85rem; color: var(--text-muted); }
+.map-grid-lines {
+  position: absolute; inset: 0; opacity: 0.06;
+  background-image:
+    linear-gradient(rgba(255,159,28,1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,159,28,1) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.map-btn-wrap { margin-top: 10px; }
+.map-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, var(--crimson), var(--saffron));
+  color: #fff; padding: 13px 28px; border-radius: 50px;
+  font-weight: 700; font-size: 0.85rem; text-decoration: none;
+  letter-spacing: 1px; text-transform: uppercase;
+  box-shadow: 0 8px 30px rgba(230,57,70,0.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.map-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 50px rgba(255,159,28,0.4); }
+
+/* ─── REVIEWS ─── */
+.reviews-section { background: linear-gradient(180deg, var(--deep) 0%, #150008 100%); }
+.reviews-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px; margin-top: 60px;
+}
+.review-3d {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px; padding: 32px;
+  position: relative; overflow: hidden;
+  transition: transform .4s, box-shadow .4s;
+}
+.review-3d:hover { transform: translateY(-6px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+.review-big-quote {
+  position: absolute; top: -10px; right: 20px;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 8rem; color: rgba(255,209,102,0.06); line-height: 1;
+  pointer-events: none;
+}
+.review-stars { font-size: 1rem; letter-spacing: 3px; margin-bottom: 16px; color: var(--gold); }
+.review-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem; font-style: italic;
+  color: rgba(255,255,255,0.75); line-height: 1.8; margin-bottom: 24px;
+}
+.review-author { font-weight: 700; color: #fff; font-size: 0.9rem; }
+.review-location { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+.review-accent {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+}
+
+/* ─── CTA ─── */
+.cta-section {
+  position: relative; z-index: 1;
+  padding: 120px 6vw;
+  text-align: center; overflow: hidden;
+}
+.cta-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #4a0010 0%, #1a000a 40%, #000a2a 100%);
+}
+.cta-glow1 {
+  position: absolute; top:-100px; left:50%; transform:translateX(-50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(ellipse, rgba(230,57,70,0.4), transparent 70%);
+  pointer-events: none;
+}
+.cta-glow2 {
+  position: absolute; bottom:-80px; left:30%;
+  width: 400px; height: 300px;
+  background: radial-gradient(ellipse, rgba(255,159,28,0.3), transparent 70%);
+  pointer-events: none;
+}
+.cta-inner { position: relative; z-index: 1; }
+.cta-eyebrow {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 20px;
+}
+.cta-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 700;
+  line-height: 1.1; margin-bottom: 20px; color: #fff;
+}
+.cta-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.2rem; color: var(--text-muted); margin-bottom: 50px; }
+.cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+/* ─── FOOTER ─── */
+footer {
+  background: #060002; padding: 60px 6vw 30px;
+  border-top: 1px solid rgba(255,159,28,0.12);
+  position: relative; z-index: 1;
+}
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 60px; margin-bottom: 48px; }
+.footer-brand {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.6rem; font-weight: 700; margin-bottom: 14px;
+  background: linear-gradient(135deg, #ffd166, #ff9f1c, #e63946);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.footer-tagline { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: var(--text-muted); line-height: 1.7; max-width: 280px; }
+.footer-col h4 {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--saffron);
+  margin-bottom: 20px;
+}
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.footer-col a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; transition: color .3s; }
+.footer-col a:hover { color: var(--gold); }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 24px; text-align: center;
+  font-size: 0.8rem; color: var(--text-muted);
+}
+
+/* ─── PARTICLES ─── */
+.particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.particle {
+  position: absolute; border-radius: 50%;
+  animation: particle-rise linear infinite;
+  opacity: 0;
+}
+@keyframes particle-rise {
+  0% { transform: translateY(110vh) scale(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+}
+
+/* ─── SCROLL ANIMATIONS ─── */
+.reveal {
+  opacity: 0; transform: translateY(40px);
+  transition: opacity .8s ease, transform .8s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-left { opacity: 0; transform: translateX(-50px); transition: opacity .8s ease, transform .8s ease; }
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+.reveal-right { opacity: 0; transform: translateX(50px); transition: opacity .8s ease, transform .8s ease; }
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  .about-grid,.loc-grid,.footer-grid{grid-template-columns:1fr;gap:36px;}
+  .nav-links{display:none;}
+  nav{padding:14px 4vw;}
+  .hero-rating{flex-wrap:wrap;gap:12px;}
+}
+/* ───────────────── RESPONSIVE FIXES ───────────────── */
+
+/* Tablets */
+@media (max-width: 1024px){
+
+  .hero{
+    padding:120px 5vw 70px;
+  }
+
+  .hero-title{
+    font-size: clamp(2.5rem, 10vw, 5rem);
+  }
+
+  .about-grid,
+  .loc-grid{
+    gap:40px;
+  }
+
+  .menu-grid{
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .reviews-grid{
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .footer-grid{
+    grid-template-columns:1fr;
+    gap:40px;
+  }
+}
+
+
+/* Mobile */
+@media (max-width: 768px){
+
+  html{
+    font-size:14px;
+  }
+
+  body{
+    cursor:auto;
+  }
+
+  #cursor,
+  #cursor-ring,
+  #bg-canvas{
+    display:none;
+  }
+
+  nav{
+    padding:16px 5vw;
+    backdrop-filter: blur(14px);
+    background: rgba(13,0,5,0.92);
+  }
+
+  .nav-logo{
+    font-size:1rem;
+  }
+
+  .nav-links{
+    display:none;
+  }
+
+  .nav-cta{
+    padding:10px 18px;
+    font-size:0.7rem;
+  }
+
+  .hero{
+    min-height:auto;
+    padding:120px 5vw 70px;
+  }
+
+  .hero-badge{
+    font-size:0.62rem;
+    letter-spacing:2px;
+    padding:8px 16px;
+    text-align:center;
+  }
+
+  .hero-title{
+    font-size: clamp(2.3rem, 13vw, 4rem);
+    line-height:1.1;
+  }
+
+  .hero-script{
+    font-size:1rem;
+    margin:20px 0 30px;
+  }
+
+  .hero-btns{
+    width:100%;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .btn-3d{
+    width:100%;
+    max-width:320px;
+    text-align:center;
+    padding:15px 20px;
+  }
+
+  .hero-rating{
+    width:100%;
+    border-radius:24px;
+    padding:16px;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  .rating-divider{
+    display:none;
+  }
+
+  .section{
+    padding:70px 5vw;
+  }
+
+  .section-eyebrow{
+    justify-content:center;
+    text-align:center;
+  }
+
+  .section-eyebrow::before,
+  .section-eyebrow::after{
+    max-width:30px;
+  }
+
+  .section-h2{
+    font-size:2rem;
+    text-align:center;
+  }
+
+  .section-sub{
+    font-size:1rem;
+    text-align:center;
+  }
+
+  .about-grid,
+  .loc-grid,
+  .footer-grid{
+    grid-template-columns:1fr;
+    gap:30px;
+  }
+
+  .about-img-wrap{
+    transform:none !important;
+  }
+
+  .stat-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .stat-3d{
+    padding:20px 14px;
+  }
+
+  .stat-3d-num{
+    font-size:1.8rem;
+  }
+
+  .menu-grid{
+    grid-template-columns:1fr;
+  }
+
+  .menu-card-3d:hover{
+    transform:none;
+  }
+
+  .card-face{
+    height:150px;
+    font-size:3.5rem;
+  }
+
+  .why-grid{
+    grid-template-columns:1fr;
+  }
+
+  .why-card{
+    padding:28px 22px;
+  }
+
+  .loc-card{
+    padding:28px 22px;
+  }
+
+  .map-3d{
+    min-height:280px;
+  }
+
+  .reviews-grid{
+    grid-template-columns:1fr;
+  }
+
+  .review-3d{
+    padding:26px 22px;
+  }
+
+  .cta-section{
+    padding:90px 5vw;
+  }
+
+  .cta-title{
+    font-size:2.3rem;
+  }
+
+  .cta-sub{
+    font-size:1rem;
+  }
+
+  .cta-btns{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .footer{
+    padding:50px 5vw 25px;
+  }
+
+  .footer-brand{
+    font-size:1.3rem;
+  }
+
+  .footer-tagline{
+    max-width:100%;
+  }
+
+  .marquee-item{
+    font-size:0.7rem;
+    padding:0 18px;
+  }
+
+  .orb{
+    filter:blur(90px);
+    opacity:0.2;
+  }
+}
+
+
+/* Small phones */
+@media (max-width: 480px){
+
+  .hero-title{
+    font-size:2rem;
+  }
+
+  .section-h2{
+    font-size:1.7rem;
+  }
+
+  .hero-rating{
+    padding:14px;
+  }
+
+  .rating-val{
+    font-size:1.2rem;
+  }
+
+  .card-body{
+    padding:20px;
+  }
+
+  .loc-row{
+    gap:12px;
+  }
+
+  .map-location{
+    font-size:1rem;
+  }
+
+  .cta-title{
+    font-size:1.9rem;
+  }
+
+  .btn-3d{
+    font-size:0.75rem;
+    letter-spacing:1px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- 3D CANVAS -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Tanatan Pan®</div>
+  <ul class="nav-links">
+    <li><a href="#about">Story</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#why">Why Us</a></li>
+    <li><a href="#location">Visit</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+  </ul>
+  <a href="#location" class="nav-cta">Find Us</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div class="hero-badge">🌿 Surat's Premier Pan Destination</div>
+
+  <h1 class="hero-title">
+    <span class="title-line1">The Art of</span><br>
+    <span class="title-line2">Tanatan Pan</span>
+  </h1>
+
+  <p class="hero-script">Crafted with love · Served with tradition · Every bite, a memory</p>
+
+  <div class="hero-btns">
+    <a href="#menu" class="btn-3d btn-fire">🌿 Explore Menu</a>
+    <a href="#location" class="btn-3d btn-ghost">📍 Visit in Surat</a>
+  </div>
+
+  <div class="hero-rating">
+    <div>
+      <div class="rating-stars">★★★★★</div>
+      <div class="rating-label">Customer Stars</div>
+    </div>
+    <div class="rating-divider"></div>
+    <div class="rating-val">4.6</div>
+    <div class="rating-divider"></div>
+    <div>
+      <div style="font-weight:700;font-size:1rem;">Loved</div>
+      <div class="rating-label">by Thousands</div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">🌿 Meetha Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🌹 Gulkand Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🍫 Chocolate Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">✨ Signature Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🍓 Banarasi Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🥤 Cold Drinks <span class="dot">✦</span></span>
+    <span class="marquee-item">🌿 Meetha Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🌹 Gulkand Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🍫 Chocolate Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">✨ Signature Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🍓 Banarasi Pan <span class="dot">✦</span></span>
+    <span class="marquee-item">🥤 Cold Drinks <span class="dot">✦</span></span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="section about-section" id="about">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">Our Story</div>
+    <h2 class="section-h2 reveal">More Than a Pan —<br>It's a Tradition</h2>
+    <div class="about-grid">
+      <div class="about-img-wrap reveal-left">
+        <img src="/mnt/user-data/uploads/1774692271056_hhh.webp" alt="Tanatan Pan Grand Opening"
+          onerror="this.style.display='none';this.parentElement.style.fontSize='6rem';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center'">
+        <div class="about-glow"></div>
+        <div class="grand-badge">🎉 Grand Opening · Surat</div>
+      </div>
+      <div class="reveal-right">
+        <p class="section-sub" style="max-width:100%;margin-bottom:20px;">
+          Tanatan Pan® is where heritage meets flavour. We craft every pan with the finest ingredients — from farm-fresh betel leaves to exotic gulkand — delivering a symphony of taste that lingers long after the last bite.
+        </p>
+        <p style="font-size:0.92rem;color:var(--text-muted);line-height:1.8;margin-bottom:36px;">
+          Located in the heart of Vesu, Surat, we've become the go-to destination for pan lovers seeking authentic taste paired with a luxurious contemporary experience. Each fold is a story. Each bite, a journey.
+        </p>
+        <div class="stat-grid">
+          <div class="stat-3d"><div class="stat-3d-num">4.6★</div><div class="stat-3d-label">Rating</div></div>
+          <div class="stat-3d"><div class="stat-3d-num">20+</div><div class="stat-3d-label">Varieties</div></div>
+          <div class="stat-3d"><div class="stat-3d-num">100%</div><div class="stat-3d-label">Fresh Daily</div></div>
+          <div class="stat-3d"><div class="stat-3d-num">∞</div><div class="stat-3d-label">Happy Souls</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="section menu-section" id="menu">
+  <div class="section-inner">
+    <div class="centered">
+      <div class="section-eyebrow reveal">Crafted Specialities</div>
+      <h2 class="section-h2 reveal">The Tanatan Menu</h2>
+      <p class="section-sub reveal">Every bite tells a story of centuries-old craft, made with ingredients so fine they sing.</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-card-3d c1 reveal">
+        <div class="veg-dot"></div>
+        <div class="card-glow" style="background:linear-gradient(135deg,rgba(230,57,70,0.2),transparent)"></div>
+        <div class="card-face">🌿</div>
+        <div class="card-body">
+          <div class="card-name">Classic Meetha Pan</div>
+          <div class="card-desc">Traditional sweet betel leaf with supari, coconut, and secret masalas. Pure nostalgia in every fold.</div>
+          <div class="card-footer">
+            <span class="card-price">₹30+</span>
+            <span class="card-tag">BESTSELLER</span>
+          </div>
+        </div>
+      </div>
+      <div class="menu-card-3d c2 reveal">
+        <div class="veg-dot"></div>
+        <div class="card-glow" style="background:linear-gradient(135deg,rgba(255,159,28,0.2),transparent)"></div>
+        <div class="card-face">🌹</div>
+        <div class="card-body">
+          <div class="card-name">Gulkand Pan</div>
+          <div class="card-desc">Fragrant rose petal jam paired with premium betel leaf — floral, sweet, utterly refreshing.</div>
+          <div class="card-footer">
+            <span class="card-price">₹40+</span>
+            <span class="card-tag">POPULAR</span>
+          </div>
+        </div>
+      </div>
+      <div class="menu-card-3d c3 reveal">
+        <div class="veg-dot"></div>
+        <div class="card-glow" style="background:linear-gradient(135deg,rgba(45,198,83,0.2),transparent)"></div>
+        <div class="card-face">🍫</div>
+        <div class="card-body">
+          <div class="card-name">Chocolate Pan</div>
+          <div class="card-desc">Silky chocolate filling wrapped in fresh betel leaf. A daring fusion that'll blow your mind.</div>
+          <div class="card-footer">
+            <span class="card-price">₹50+</span>
+            <span class="card-tag">FUSION</span>
+          </div>
+        </div>
+      </div>
+      <div class="menu-card-3d c4 reveal">
+        <div class="veg-dot"></div>
+        <div class="card-glow" style="background:linear-gradient(135deg,rgba(255,107,157,0.2),transparent)"></div>
+        <div class="card-face">✨</div>
+        <div class="card-body">
+          <div class="card-name">Special Tanatan Pan</div>
+          <div class="card-desc">Our closely guarded signature creation — the one that made Tanatan® famous across Surat.</div>
+          <div class="card-footer">
+            <span class="card-price">₹80+</span>
+            <span class="card-tag">SIGNATURE</span>
+          </div>
+        </div>
+      </div>
+      <div class="menu-card-3d c5 reveal">
+        <div class="veg-dot"></div>
+        <div class="card-glow" style="background:linear-gradient(135deg,rgba(6,214,160,0.2),transparent)"></div>
+        <div class="card-face">🍓</div>
+        <div class="card-body">
+          <div class="card-name">Banarasi Pan</div>
+          <div class="card-desc">Inspired by the golden lanes of Banaras — loaded with authentic ingredients true to the original style.</div>
+          <div class="card-footer">
+            <span class="card-price">₹60+</span>
+            <span class="card-tag">AUTHENTIC</span>
+          </div>
+        </div>
+      </div>
+      <div class="menu-card-3d c6 reveal">
+        <div class="veg-dot"></div>
+        <div class="card-glow" style="background:linear-gradient(135deg,rgba(255,209,102,0.2),transparent)"></div>
+        <div class="card-face">🥤</div>
+        <div class="card-body">
+          <div class="card-name">Cold Drinks & Shakes</div>
+          <div class="card-desc">Refreshing chilled beverages to complement your pan — a wide range of flavours and options.</div>
+          <div class="card-footer">
+            <span class="card-price">₹20+</span>
+            <span class="card-tag">REFRESHING</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="section why-section" id="why">
+  <div class="section-inner">
+    <div class="centered">
+      <div class="section-eyebrow reveal">The Difference</div>
+      <h2 class="section-h2 reveal">Why Tanatan Pan?</h2>
+      <p class="section-sub reveal">We don't just serve pan. We deliver moments you'll carry with you forever.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <div class="why-icon-wrap" style="background:linear-gradient(135deg,rgba(45,198,83,0.2),rgba(45,198,83,0.05))">🌿</div>
+        <div class="why-title">Freshest Leaves Daily</div>
+        <div class="why-text">Hand-picked, farm-fresh betel leaves sourced and delivered every single morning. Zero compromise.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon-wrap" style="background:linear-gradient(135deg,rgba(255,209,102,0.2),rgba(255,209,102,0.05))">🏅</div>
+        <div class="why-title">Premium Ingredients</div>
+        <div class="why-text">From authentic gulkand to imported saffron — every single ingredient is selected for excellence.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon-wrap" style="background:linear-gradient(135deg,rgba(255,159,28,0.2),rgba(255,159,28,0.05))">👨‍🍳</div>
+        <div class="why-title">Expert Craftsmanship</div>
+        <div class="why-text">Our pan-makers bring decades of experience and profound passion to every fold they create.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon-wrap" style="background:linear-gradient(135deg,rgba(6,214,160,0.2),rgba(6,214,160,0.05))">✨</div>
+        <div class="why-title">Hygienic Standards</div>
+        <div class="why-text">Spotless preparation, gloved handling, strict hygiene protocols — always, without exception.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon-wrap" style="background:linear-gradient(135deg,rgba(230,57,70,0.2),rgba(230,57,70,0.05))">🎉</div>
+        <div class="why-title">Festive Specials</div>
+        <div class="why-text">Unique seasonal and festive pan collections that make every celebration even sweeter.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon-wrap" style="background:linear-gradient(135deg,rgba(255,107,157,0.2),rgba(255,107,157,0.05))">💚</div>
+        <div class="why-title">100% Vegetarian</div>
+        <div class="why-text">Every product on our menu is completely vegetarian — safe, pure, and delicious for all.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION -->
+<section class="section loc-section" id="location">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">Find Us</div>
+    <h2 class="section-h2 reveal">Visit Tanatan Pan</h2>
+    <div class="loc-grid">
+      <div class="loc-card reveal-left">
+        <h3>Store Information</h3>
+        <div class="loc-row">
+          <div class="loc-icon">📍</div>
+          <div>
+            <div class="loc-label">Address</div>
+            <div class="loc-val">G-33, Atlantis Square, Celebration Hall<br>VIP Road, Vesu, Surat, Gujarat – 395007</div>
+          </div>
+        </div>
+        <div class="loc-row">
+          <div class="loc-icon">🕗</div>
+          <div>
+            <div class="loc-label">Hours</div>
+            <div class="loc-val">Sunday: Opens 8:00 AM<br>Mon–Sat: Please call for timings</div>
+          </div>
+        </div>
+        <div class="loc-row">
+          <div class="loc-icon">⭐</div>
+          <div>
+            <div class="loc-label">Rating</div>
+            <div class="loc-val">4.6 / 5 on Google Reviews</div>
+          </div>
+        </div>
+        <div class="loc-row">
+          <div class="loc-icon">🌿</div>
+          <div>
+            <div class="loc-label">Specialty</div>
+            <div class="loc-val">Registered Pan Brand · 20+ Varieties · Premium Experience</div>
+          </div>
+        </div>
+        <a href="https://maps.google.com/?q=G-33+Atlantis+Square+VIP+Road+Vesu+Surat+Gujarat+395007" target="_blank" class="map-btn" style="margin-top:28px;">
+          📍 Open in Google Maps
+        </a>
+      </div>
+      <div class="map-3d reveal-right">
+        <div class="map-grid-lines"></div>
+        <div class="map-3d-emoji">🗺️</div>
+        <div class="map-location">Vesu, Surat</div>
+        <div class="map-sub">G-33, Atlantis Square, VIP Road</div>
+        <div class="map-btn-wrap">
+          <a href="https://maps.google.com/?q=G-33+Atlantis+Square+VIP+Road+Vesu+Surat+Gujarat+395007" target="_blank" class="map-btn">
+            Get Directions →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="section reviews-section" id="reviews">
+  <div class="section-inner">
+    <div class="centered">
+      <div class="section-eyebrow reveal">Testimonials</div>
+      <h2 class="section-h2 reveal">Loved by Suratians</h2>
+      <p class="section-sub reveal">What our guests say after their first — and definitely not last — visit.</p>
+    </div>
+    <div class="reviews-grid">
+      <div class="review-3d reveal">
+        <div class="review-big-quote">"</div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">The Chocolate Pan here is absolutely out of this world! Never thought pan and chocolate could be this perfect together. Coming back every weekend!</p>
+        <div class="review-author">Priya S.</div>
+        <div class="review-location">Surat, Gujarat</div>
+        <div class="review-accent" style="background:linear-gradient(90deg,var(--crimson),var(--saffron))"></div>
+      </div>
+      <div class="review-3d reveal">
+        <div class="review-big-quote">"</div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">Best pan in Surat, hands down. Their signature Tanatan Pan is something you have to taste to believe. The quality and freshness is simply unmatched!</p>
+        <div class="review-author">Rahul M.</div>
+        <div class="review-location">Vesu, Surat</div>
+        <div class="review-accent" style="background:linear-gradient(90deg,var(--saffron),var(--gold))"></div>
+      </div>
+      <div class="review-3d reveal">
+        <div class="review-big-quote">"</div>
+        <div class="review-stars">★★★★☆</div>
+        <p class="review-text">Really nice ambience and incredibly fresh ingredients. The Banarasi Pan took me straight back to Varanasi. A must-visit for every pan lover in the city!</p>
+        <div class="review-author">Anjali T.</div>
+        <div class="review-location">Surat, Gujarat</div>
+        <div class="review-accent" style="background:linear-gradient(90deg,var(--emerald),var(--teal))"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="cta-glow1"></div>
+  <div class="cta-glow2"></div>
+  <div class="cta-inner reveal">
+    <div class="cta-eyebrow">✦ Ready? ✦</div>
+    <h2 class="cta-title">Experience the<br>Tanatan Magic</h2>
+    <p class="cta-sub">Visit us in Vesu, Surat — and taste what everyone's talking about.</p>
+    <div class="cta-btns">
+      <a href="https://maps.google.com/?q=G-33+Atlantis+Square+VIP+Road+Vesu+Surat+Gujarat+395007" target="_blank" class="btn-3d btn-fire">📍 Get Directions</a>
+      <a href="#menu" class="btn-3d btn-ghost">🌿 View Menu</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Tanatan Pan®</div>
+      <div class="footer-tagline">Surat's finest pan experience. Crafted with tradition, served with love, remembered forever.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Explore</h4>
+      <ul>
+        <li><a href="#about">Our Story</a></li>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#why">Why Us</a></li>
+        <li><a href="#location">Visit Us</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Location</h4>
+      <ul>
+        <li><a href="#">G-33, Atlantis Square</a></li>
+        <li><a href="#">VIP Road, Vesu</a></li>
+        <li><a href="#">Surat, Gujarat 395007</a></li>
+        <li><a href="#" style="color:var(--saffron);margin-top:4px;display:block;">Opens 8 AM · Sunday</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 Tanatan Pan® · All rights reserved · Crafted with 🌿 in Surat, Gujarat
+  </div>
+</footer>
+
+<script>
+// ── CUSTOM CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e=>{
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+});
+(function animRing(){
+  rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+})();
+document.querySelectorAll('a,button,.menu-card-3d,.stat-3d,.why-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ cursor.style.width='22px';cursor.style.height='22px';cursor.style.background='var(--gold)'; });
+  el.addEventListener('mouseleave',()=>{ cursor.style.width='14px';cursor.style.height='14px';cursor.style.background='var(--saffron)'; });
+});
+
+// ── THREE.JS BACKGROUND ──
+(function initThree(){
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(innerWidth,innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 200);
+  camera.position.z = 30;
+
+  // Stars / sparkles
+  const starGeo = new THREE.BufferGeometry();
+  const N = 1800;
+  const pos = new Float32Array(N*3), col = new Float32Array(N*3);
+  const palette = [[1,.4,.2],[1,.8,.2],[.9,.1,.2],[.2,.9,.5],[1,.4,.7],[.1,.9,.8]];
+  for(let i=0;i<N;i++){
+    pos[i*3]   = (Math.random()-0.5)*120;
+    pos[i*3+1] = (Math.random()-0.5)*80;
+    pos[i*3+2] = (Math.random()-0.5)*80;
+    const c = palette[Math.floor(Math.random()*palette.length)];
+    col[i*3]=c[0]; col[i*3+1]=c[1]; col[i*3+2]=c[2];
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(col,3));
+  const starMat = new THREE.PointsMaterial({size:0.22, vertexColors:true, transparent:true, opacity:0.75});
+  scene.add(new THREE.Points(starGeo,starMat));
+
+  // Floating torus rings
+  const rings = [];
+  const ringColors = [0xe63946, 0xff9f1c, 0x2dc653, 0xff6b9d, 0x06d6a0, 0xffd166];
+  for(let i=0;i<8;i++){
+    const geo = new THREE.TorusGeometry(2.5+Math.random()*3, 0.04+Math.random()*0.08, 8, 60);
+    const mat = new THREE.MeshBasicMaterial({color: ringColors[i%ringColors.length], transparent:true, opacity:0.15+Math.random()*0.2, wireframe:false});
+    const mesh = new THREE.Mesh(geo,mat);
+    mesh.position.set((Math.random()-0.5)*40,(Math.random()-0.5)*30,(Math.random()-0.5)*20-10);
+    mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+    mesh.userData = {rx:Math.random()*0.003-0.0015, ry:Math.random()*0.004-0.002, rz:Math.random()*0.002-0.001};
+    scene.add(mesh); rings.push(mesh);
+  }
+
+  // Icosahedrons / geometric spheres
+  const geos = [];
+  for(let i=0;i<6;i++){
+    const geo = new THREE.IcosahedronGeometry(0.5+Math.random()*1.2, 1);
+    const mat = new THREE.MeshBasicMaterial({color:ringColors[i%ringColors.length], wireframe:true, transparent:true, opacity:0.12+Math.random()*0.15});
+    const mesh = new THREE.Mesh(geo,mat);
+    mesh.position.set((Math.random()-0.5)*50,(Math.random()-0.5)*35,(Math.random()-0.5)*20-15);
+    mesh.userData = {rx:Math.random()*0.005, ry:Math.random()*0.008, rz:Math.random()*0.004};
+    scene.add(mesh); geos.push(mesh);
+  }
+
+  let mx3=0, my3=0;
+  document.addEventListener('mousemove',e=>{ mx3=(e.clientX/innerWidth-0.5)*2; my3=-(e.clientY/innerHeight-0.5)*2; });
+
+  window.addEventListener('resize',()=>{
+    renderer.setSize(innerWidth,innerHeight);
+    camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  });
+
+  let t=0;
+  (function animate(){
+    requestAnimationFrame(animate); t+=0.005;
+    camera.position.x += (mx3*3 - camera.position.x)*0.03;
+    camera.position.y += (my3*2 - camera.position.y)*0.03;
+    camera.lookAt(scene.position);
+    rings.forEach(r=>{ r.rotation.x+=r.userData.rx; r.rotation.y+=r.userData.ry; r.rotation.z+=r.userData.rz; });
+    geos.forEach(g=>{ g.rotation.x+=g.userData.rx; g.rotation.y+=g.userData.ry; g.rotation.z+=g.userData.rz; });
+    starMat.opacity = 0.5 + Math.sin(t)*0.25;
+    renderer.render(scene,camera);
+  })();
+})();
+
+// ── PARTICLES ──
+const pContainer = document.getElementById('particles');
+const pColors = ['#e63946','#ff9f1c','#ffd166','#2dc653','#ff6b9d','#06d6a0','#fff'];
+for(let i=0;i<60;i++){
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const size = 2+Math.random()*4;
+  const col = pColors[Math.floor(Math.random()*pColors.length)];
+  const dur = 6+Math.random()*10;
+  const delay = -Math.random()*dur;
+  const left = Math.random()*100;
+  p.style.cssText = `width:${size}px;height:${size}px;background:${col};left:${left}%;animation-duration:${dur}s;animation-delay:${delay}s;box-shadow:0 0 ${size*2}px ${col};`;
+  pContainer.appendChild(p);
+}
+
+// ── SCROLL REVEAL ──
+const revealEls = document.querySelectorAll('.reveal,.reveal-left,.reveal-right');
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); } });
+},{threshold:0.12});
+revealEls.forEach(el=>observer.observe(el));
+
+// ── 3D CARD TILT ──
+document.querySelectorAll('.menu-card-3d').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-0.5;
+    const y=(e.clientY-r.top)/r.height-0.5;
+    card.style.transform=`perspective(800px) rotateY(${x*18}deg) rotateX(${-y*12}deg) translateY(-8px) scale(1.02)`;
+  });
+  card.addEventListener('mouseleave',()=>{ card.style.transform=''; });
+});
+document.querySelectorAll('.stat-3d').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-0.5;
+    const y=(e.clientY-r.top)/r.height-0.5;
+    card.style.transform=`perspective(400px) rotateY(${x*12}deg) rotateX(${-y*8}deg) translateY(-4px)`;
+  });
+  card.addEventListener('mouseleave',()=>{ card.style.transform=''; });
+});
+const isMobile = window.innerWidth < 768;
+
+if(isMobile){
+  document.getElementById('bg-canvas').style.display = 'none';
+}
+if(window.innerWidth > 768){
+  // tilt effect code
+}
+</script>
+</body>
+</html>
